@@ -256,7 +256,7 @@ input, textarea, button {
 .tag-fun  { background-color: var(--ctx-fun-bg);  color: var(--ctx-fun-text); }
 
 /* Retry Button - Refined */
-.btn-retry {
+.btn-retry,.btn-jump {
     /* Width handled in HTML */
     margin-top: 2rem;
     padding: 0.875rem 2rem;
@@ -269,7 +269,7 @@ input, textarea, button {
     transition: all 0.3s ease;
     opacity: 0.8;
 }
-.btn-retry:hover {
+.btn-retry:hover,.btn-jump:hover {
     border-color: var(--text-accent);
     color: var(--text-invert);
     background-color: var(--text-accent);

@@ -87,12 +87,11 @@ function showErrorMessage() {
 
 // EVENT LISTENERS
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load fortune data
     await loadFortuneData();
 
-    // Bind event handlers
     const btnDrawOmikuji = document.getElementById('btn-draw-omikuji');
     const btnReset = document.getElementById('btn-reset');
+    const btnNote = document.getElementById('btn-note'); // ← これ追加！
 
     if (btnDrawOmikuji) {
         btnDrawOmikuji.addEventListener('click', drawOmikuji);
@@ -101,7 +100,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnReset) {
         btnReset.addEventListener('click', resetApp);
     }
+
+    if (btnNote) {
+        btnNote.addEventListener('click', () => {
+            location.href = 'https://note.com/lapis_bluenote/n/n1f0b47ff28e2';
+        });
+    }
 });
+
 
 // LOGIC
 function determineFortune() {
