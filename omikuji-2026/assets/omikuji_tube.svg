@@ -1,0 +1,10 @@
+<svg width="80" height="120" viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Tube Body (Hexagonal Prism representation) -->
+    <path d="M10 20 L40 5 L70 20 V100 L40 115 L10 100 Z" fill="#E6C8A0" stroke="#8B4513" stroke-width="2"/>
+    <path d="M10 20 L40 35 L70 20" fill="none" stroke="#8B4513" stroke-width="2" opacity="0.5"/>
+    <path d="M40 35 V115" fill="none" stroke="#8B4513" stroke-width="2" opacity="0.3"/>
+    <!-- Top Shade -->
+    <path d="M10 20 L40 5 L70 20 L40 35 Z" fill="#D2B48C" opacity="0.5"/>
+    <!-- Hole -->
+    <circle cx="40" cy="20" r="4" fill="#3E2723"/>
+</svg>
