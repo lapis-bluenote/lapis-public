@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lapis-public",
+  "compatibility_date": "2025-09-27",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "omikuji-2026"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
