@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lapis × Claude の星降るワンオラクル</title>
+
+<!-- OGP Tags -->
+<meta property="og:title" content="Lapis × Claude の星降るワンオラクル">
+<meta property="og:description" content="心を静めて、カードに問いかけましょう。大アルカナ22枚があなたへのメッセージを届けます。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="★ここに画像URLを入れてください★">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta property="og:url" content="★ここに公開URLを入れてください★">
+<meta property="og:site_name" content="Lapis × Claude の星降るワンオラクル">
+<meta property="og:locale" content="ja_JP">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lapis × Claude の星降るワンオラクル">
+<meta name="twitter:description" content="心を静めて、カードに問いかけましょう。大アルカナ22枚があなたへのメッセージを届けます。">
+<meta name="twitter:image" content="★ここに画像URLを入れてください★">
+<!-- General Meta -->
+<meta name="description" content="大アルカナ22枚からランダムで1枚引くワンオラクル占い。正位置・逆位置それぞれの意味を読み解きます。">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #0a0612;
+  --bg-purple: #140e24;
+  --purple-dark: #1a1030;
+  --purple-mid: #2d1b5e;
+  --purple-light: #6b3fa0;
+  --gold: #d4a843;
+  --gold-light: #f0d080;
+  --gold-pale: #f5e6c0;
+  --text-main: #e8e0f0;
+  --text-dim: #9a8fb5;
+  --card-bg: #1e1438;
+}
+
+html, body {
+  width: 100%; min-height: 100vh; overflow-x: hidden;
+  font-family: 'Noto Serif JP', serif;
+  background: var(--bg-deep);
+  color: var(--text-main);
+}
+
+/* ===== STARFIELD BACKGROUND ===== */
+#starfield {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+.star {
+  position: absolute; border-radius: 50%; background: #fff;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; position: relative; z-index: 1; padding: 2rem 1.5rem;
+  text-align: center;
+}
+.screen.active { display: flex; }
+
+/* ===== SCREEN 1: WELCOME ===== */
+#screen-welcome {
+  gap: 1.5rem;
+}
+.welcome-ornament {
+  width: 80px; height: 80px; opacity: 0.6;
+  animation: float 4s ease-in-out infinite;
+}
+.welcome-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.5rem, 5vw, 2.6rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.5;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(212, 168, 67, 0.3));
+}
+.welcome-sub {
+  font-size: clamp(0.85rem, 2.5vw, 1.05rem);
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+}
+.welcome-divider {
+  width: 120px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border: 1.5px solid var(--gold);
+  background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.05));
+  color: var(--gold-light);
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(212,168,67,0.2), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.btn:hover::before { opacity: 1; }
+.btn:hover {
+  box-shadow: 0 0 30px rgba(212,168,67,0.25), inset 0 0 30px rgba(212,168,67,0.05);
+  transform: translateY(-2px);
+}
+.btn:active { transform: translateY(0); }
+
+/* ===== SCREEN 2: CARD DRAW ===== */
+#screen-draw {
+  gap: 1rem;
+}
+#drawTexts {
+  transition: opacity 0.6s ease, max-height 0.6s ease, margin 0.6s ease;
+  max-height: 200px; overflow: hidden;
+}
+#drawTexts.hidden {
+  opacity: 0; max-height: 0; margin: 0;
+  pointer-events: none;
+}
+.draw-text {
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  color: var(--text-dim);
+  line-height: 1.9;
+  max-width: 400px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards;
+}
+.draw-text:nth-child(2) { animation-delay: 0.3s; }
+
+/* ===== CARD CONTAINER ===== */
+.card-container {
+  perspective: 1200px;
+  width: clamp(200px, 55vw, 260px);
+  height: clamp(310px, 85vw, 400px);
+  margin: 1rem 0;
+  cursor: pointer;
+}
+.card-inner {
+  position: relative; width: 100%; height: 100%;
+  transition: transform 0.9s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ===== CARD BACK ===== */
+.card-back {
+  background: var(--card-bg);
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(107,63,160,0.3), 0 0 80px rgba(107,63,160,0.1);
+}
+.card-back-pattern {
+  width: 100%; height: 100%;
+}
+
+/* ===== CARD FRONT ===== */
+.card-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(170deg, #1a1230, #0f0a1e);
+  border: 2px solid var(--gold);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 1.2rem;
+  gap: 0.5rem;
+  box-shadow: 0 0 40px rgba(212,168,67,0.15), 0 0 80px rgba(107,63,160,0.2);
+}
+.card-number {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.75rem;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  opacity: 0.8;
+}
+.card-icon-wrap {
+  width: clamp(70px, 20vw, 100px); height: clamp(70px, 20vw, 100px);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.3s;
+}
+.card-icon-wrap.reversed { transform: rotate(180deg); }
+.card-icon-wrap svg { width: 100%; height: 100%; }
+.card-name-jp {
+  font-family: 'Noto Serif JP', serif;
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  font-weight: 700;
+  color: var(--gold-light);
+}
+.card-name-en {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.65rem, 2vw, 0.8rem);
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  opacity: 0.8;
+}
+.card-orientation {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+}
+.card-orientation.upright {
+  color: var(--gold-light); border-color: var(--gold);
+}
+.card-orientation.reversed-label {
+  color: #b48ede; border-color: #8a6cb8;
+}
+.card-keywords {
+  font-size: clamp(0.7rem, 2vw, 0.8rem);
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.card-divider {
+  width: 60%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.5;
+}
+.card-message {
+  font-size: clamp(0.6rem, 1.8vw, 0.72rem);
+  color: var(--text-dim);
+  line-height: 1.8;
+  text-align: center;
+  max-width: 95%;
+}
+
+/* ===== SCREEN 3: RESULT ===== */
+#screen-result { gap: 1rem; }
+.result-card-container {
+  perspective: 1200px;
+  width: clamp(220px, 60vw, 280px);
+  height: clamp(340px, 92vw, 430px);
+}
+.result-card-inner {
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* ===== CARD APPEAR ANIMATION ===== */
+.card-appear {
+  opacity: 0;
+  animation: cardAppear 1s ease forwards 0.2s;
+}
+@keyframes cardAppear {
+  0% { opacity: 0; transform: scale(0.85) translateY(30px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ===== CARD HOVER/SWAY ===== */
+.card-sway {
+  animation: sway 3s ease-in-out infinite;
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-1.5deg) translateY(0); }
+  50% { transform: rotate(1.5deg) translateY(-6px); }
+}
+
+/* ===== GENERAL ANIMATIONS ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+.fade-in { animation: fadeIn 0.8s ease forwards; }
+.fade-in-delay { opacity: 0; animation: fadeIn 0.8s ease forwards 0.5s; }
+.fade-in-delay2 { opacity: 0; animation: fadeIn 0.8s ease forwards 1s; }
+
+/* ===== GLOW BURST ON FLIP ===== */
+.glow-burst {
+  position: absolute; inset: -50%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,0.3), transparent 60%);
+  opacity: 0; pointer-events: none; z-index: -1;
+  animation: burstGlow 1.2s ease forwards;
+}
+@keyframes burstGlow {
+  0% { opacity: 0; transform: scale(0.5); }
+  40% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 400px) {
+  .screen { padding: 1.5rem 1rem; }
+  .card-message { font-size: 0.58rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+
+<!-- SCREEN 1: WELCOME -->
+<div id="screen-welcome" class="screen active">
+  <svg class="welcome-ornament" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="30" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.5"/>
+    <circle cx="40" cy="40" r="20" fill="none" stroke="var(--gold)" stroke-width="0.5" opacity="0.4"/>
+    <polygon points="40,12 44,36 68,36 48,50 56,74 40,58 24,74 32,50 12,36 36,36" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.7"/>
+    <circle cx="40" cy="40" r="3" fill="var(--gold)" opacity="0.6"/>
+  </svg>
+  <h1 class="welcome-title">Lapis × Claude の<br>星降るワンオラクル</h1>
+  <div class="welcome-divider"></div>
+  <p class="welcome-sub">心を静めて、カードに問いかけましょう<br>大アルカナ22枚があなたへのメッセージを届けます</p>
+  <button class="btn" onclick="goToDraw()">カードを引く</button>
+</div>
+
+<!-- SCREEN 2: CARD DRAW -->
+<div id="screen-draw" class="screen">
+  <div id="drawTexts">
+    <p class="draw-text">心の中で、占いたいことを<br>思い浮かべてください</p>
+    <p class="draw-text" style="margin-top:0.8rem;">準備ができたら<br>カードをタップしてめくりましょう</p>
+  </div>
+  <div class="card-container card-appear" id="cardContainer" onclick="flipCard()">
+    <div class="card-inner card-sway" id="cardInner">
+      <div class="card-face card-back">
+        <svg class="card-back-pattern" viewBox="0 0 260 400">
+          <defs>
+            <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1a1030"/>
+              <stop offset="100%" stop-color="#0f0a1e"/>
+            </linearGradient>
+            <radialGradient id="centerGlow">
+              <stop offset="0%" stop-color="rgba(212,168,67,0.15)"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
+          </defs>
+          <rect width="260" height="400" fill="url(#bgGrad)"/>
+          <circle cx="130" cy="200" r="120" fill="url(#centerGlow)"/>
+          <!-- outer frame -->
+          <rect x="15" y="15" width="230" height="370" rx="6" fill="none" stroke="var(--gold)" stroke-width="1" opacity="0.5"/>
+          <rect x="22" y="22" width="216" height="356" rx="4" fill="none" stroke="var(--gold)" stroke-width="0.5" opacity="0.3"/>
+          <!-- center mandala -->
+          <circle cx="130" cy="200" r="70" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.4"/>
+          <circle cx="130" cy="200" r="50" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.3"/>
+          <circle cx="130" cy="200" r="30" fill="none" stroke="var(--gold)" stroke-width="0.5" opacity="0.5"/>
+          <!-- star pattern -->
+          <g transform="translate(130,200)" opacity="0.5">
+            <line x1="0" y1="-70" x2="0" y2="70" stroke="var(--gold)" stroke-width="0.5"/>
+            <line x1="-70" y1="0" x2="70" y2="0" stroke="var(--gold)" stroke-width="0.5"/>
+            <line x1="-50" y1="-50" x2="50" y2="50" stroke="var(--gold)" stroke-width="0.4"/>
+            <line x1="50" y1="-50" x2="-50" y2="50" stroke="var(--gold)" stroke-width="0.4"/>
+          </g>
+          <!-- hexagram -->
+          <g transform="translate(130,200)" opacity="0.4">
+            <polygon points="0,-55 47.6,27.5 -47.6,27.5" fill="none" stroke="var(--gold)" stroke-width="0.7"/>
+            <polygon points="0,55 47.6,-27.5 -47.6,-27.5" fill="none" stroke="var(--gold)" stroke-width="0.7"/>
+          </g>
+          <!-- moon phases top -->
+          <circle cx="100" cy="50" r="8" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.4"/>
+          <circle cx="130" cy="45" r="10" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.5"/>
+          <circle cx="160" cy="50" r="8" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.4"/>
+          <!-- corner stars -->
+          <g opacity="0.5">
+            <polygon points="40,40 42,46 48,46 43,50 45,56 40,52 35,56 37,50 32,46 38,46" fill="var(--gold)" opacity="0.4"/>
+            <polygon points="220,40 222,46 228,46 223,50 225,56 220,52 215,56 217,50 212,46 218,46" fill="var(--gold)" opacity="0.4"/>
+            <polygon points="40,360 42,366 48,366 43,370 45,376 40,372 35,376 37,370 32,366 38,366" fill="var(--gold)" opacity="0.4"/>
+            <polygon points="220,360 222,366 228,366 223,370 225,376 220,372 215,376 217,370 212,366 218,366" fill="var(--gold)" opacity="0.4"/>
+          </g>
+          <!-- center eye -->
+          <ellipse cx="130" cy="200" rx="18" ry="10" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.6"/>
+          <circle cx="130" cy="200" r="5" fill="var(--gold)" opacity="0.3"/>
+          <!-- bottom moons -->
+          <circle cx="100" cy="350" r="8" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.4"/>
+          <circle cx="130" cy="355" r="10" fill="none" stroke="var(--gold)" stroke-width="0.8" opacity="0.5"/>
+          <circle cx="160" cy="350" r="8" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="card-face card-front" id="cardFront">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+  <div id="resetWrap" style="display:none; margin-top:1.5rem;">
+    <button class="btn" onclick="resetApp()">もう1枚引く</button>
+  </div>
+</div>
+
+<script>
+// ===== CARD DATA =====
+const cards = [
+  {
+    num: '0', nameJp: '愚者', nameEn: 'The Fool',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="14" fill="none" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="44" x2="50" y2="75" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="55" x2="35" y2="45" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="55" x2="65" y2="48" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="75" x2="38" y2="92" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="75" x2="62" y2="92" stroke="#d4a843" stroke-width="2"/><circle cx="70" cy="25" r="5" fill="none" stroke="#d4a843" stroke-width="1.5" opacity="0.6"/><polygon points="30,10 32,16 38,16 33,20 35,26 30,22 25,26 27,20 22,16 28,16" fill="#d4a843" opacity="0.5"/></svg>`,
+    upKw: ['自由', '冒険', '無限の可能性'],
+    upMsg: '新しい旅立ちの時が訪れています。既成概念にとらわれず、心の赴くままに一歩を踏み出しましょう。無邪気な好奇心があなたを導いてくれます。',
+    revKw: ['無計画', '軽率', '現実逃避'],
+    revMsg: '衝動的な行動に注意が必要な時期です。自由を求めるあまり、大切なものを見落としていませんか。一度立ち止まり、足元を確認してみましょう。'
+  },
+  {
+    num: 'I', nameJp: '魔術師', nameEn: 'The Magician',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="28" r="12" fill="none" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="40" x2="50" y2="72" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="50" x2="30" y2="40" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="50" x2="70" y2="40" stroke="#d4a843" stroke-width="2"/><path d="M30,40 L25,25" stroke="#d4a843" stroke-width="1.5"/><path d="M70,40 L75,25" stroke="#d4a843" stroke-width="1.5"/><text x="47" y="18" font-size="14" fill="#d4a843" font-family="serif">∞</text><circle cx="25" cy="88" r="5" fill="none" stroke="#d4a843" stroke-width="1.2"/><polygon points="42,88 45,82 48,88 45,94" fill="none" stroke="#d4a843" stroke-width="1.2"/><line x1="58" y1="82" x2="68" y2="94" stroke="#d4a843" stroke-width="1.5"/><polygon points="78,82 81,94 75,94" fill="none" stroke="#d4a843" stroke-width="1.2"/></svg>`,
+    upKw: ['創造力', '才能の開花', '実現する力'],
+    upMsg: 'あなたには望みを現実にする力が備わっています。手元にある資源を最大限に活かし、創意工夫で道を切り開きましょう。今こそ行動の時です。',
+    revKw: ['未熟', '空回り', '才能の浪費'],
+    revMsg: '能力はあるのに活かしきれていない状態かもしれません。目的を明確にし、集中すべきポイントを絞りましょう。散漫さが最大の敵です。'
+  },
+  {
+    num: 'II', nameJp: '女教皇', nameEn: 'The High Priestess',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="22" r="10" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="32" x2="50" y2="70" stroke="#d4a843" stroke-width="2"/><path d="M35,45 Q50,55 65,45" fill="none" stroke="#d4a843" stroke-width="1.5"/><rect x="40" y="70" width="20" height="25" rx="2" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="70" x2="50" y2="95" stroke="#d4a843" stroke-width="0.8" opacity="0.5"/><circle cx="25" cy="20" r="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/><circle cx="75" cy="20" r="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/><circle cx="25" cy="20" r="4" fill="#d4a843" opacity="0.2"/></svg>`,
+    upKw: ['直感', '神秘', '内なる知恵'],
+    upMsg: '静かな内省の時間が大切です。答えは外ではなく、あなたの内側にあります。直感を信じ、心の声に耳を澄ませてみてください。',
+    revKw: ['秘密', '直感の無視', '表面的な理解'],
+    revMsg: '深い部分に目を向けることを避けていませんか。表面的な情報だけで判断すると本質を見誤ります。心を静めて内なる声に耳を傾けましょう。'
+  },
+  {
+    num: 'III', nameJp: '女帝', nameEn: 'The Empress',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="25" r="10" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M40,35 Q50,45 60,35" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M35,45 C35,75 65,75 65,45" fill="none" stroke="#d4a843" stroke-width="2"/><polygon points="50,8 54,18 46,18" fill="none" stroke="#d4a843" stroke-width="1.2"/><polygon points="44,8 50,2 56,8" fill="none" stroke="#d4a843" stroke-width="1"/><circle cx="30" cy="80" r="4" fill="#d4a843" opacity="0.3"/><circle cx="50" cy="85" r="5" fill="#d4a843" opacity="0.3"/><circle cx="70" cy="80" r="4" fill="#d4a843" opacity="0.3"/><path d="M20,90 Q35,78 50,90 Q65,78 80,90" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/></svg>`,
+    upKw: ['豊穣', '母性', '愛情'],
+    upMsg: '愛と豊かさに満ちた時期が訪れています。自分自身と周囲を慈しみ、創造性を存分に発揮しましょう。実りの季節はもうすぐそこです。',
+    revKw: ['過保護', '依存', '創造性の停滞'],
+    revMsg: '愛情が過剰になり、かえって相手や自分を束縛していませんか。手放すことも愛の一つの形です。自立と共存のバランスを見直しましょう。'
+  },
+  {
+    num: 'IV', nameJp: '皇帝', nameEn: 'The Emperor',
+    icon: `<svg viewBox="0 0 100 100"><rect x="35" y="35" width="30" height="45" rx="2" fill="none" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="35" x2="50" y2="80" stroke="#d4a843" stroke-width="1" opacity="0.4"/><line x1="35" y1="55" x2="65" y2="55" stroke="#d4a843" stroke-width="1" opacity="0.4"/><polygon points="50,8 30,35 70,35" fill="none" stroke="#d4a843" stroke-width="2"/><circle cx="50" cy="24" r="4" fill="#d4a843" opacity="0.4"/><line x1="25" y1="80" x2="75" y2="80" stroke="#d4a843" stroke-width="2.5"/><line x1="28" y1="86" x2="72" y2="86" stroke="#d4a843" stroke-width="1.5" opacity="0.6"/></svg>`,
+    upKw: ['統率力', '安定', '責任'],
+    upMsg: '強いリーダーシップと揺るぎない基盤が求められています。規律と秩序をもって物事に取り組むことで、確かな成果が得られるでしょう。',
+    revKw: ['支配的', '頑固', '権力の乱用'],
+    revMsg: '自分のやり方に固執しすぎていませんか。柔軟さを失うと、周囲との関係にひびが入ります。支配ではなく、信頼で人を導きましょう。'
+  },
+  {
+    num: 'V', nameJp: '教皇', nameEn: 'The Hierophant',
+    icon: `<svg viewBox="0 0 100 100"><line x1="50" y1="10" x2="50" y2="70" stroke="#d4a843" stroke-width="2"/><line x1="38" y1="25" x2="62" y2="25" stroke="#d4a843" stroke-width="2"/><line x1="35" y1="40" x2="65" y2="40" stroke="#d4a843" stroke-width="2"/><circle cx="50" cy="10" r="4" fill="#d4a843" opacity="0.5"/><path d="M30,70 L50,55 L70,70" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M25,85 L50,70 L75,85" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="32" cy="90" r="3" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/><circle cx="68" cy="90" r="3" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/></svg>`,
+    upKw: ['伝統', '教え', '精神的な導き'],
+    upMsg: '信頼できる導き手や教えとの出会いが示されています。伝統や慣習の中にある知恵を尊重し、学びの姿勢を大切にしましょう。',
+    revKw: ['形骸化', '束縛', '独自性の欠如'],
+    revMsg: '古いしきたりに縛られすぎていませんか。形だけの慣習に従うのではなく、本質を見極め、自分なりの信念を築く時かもしれません。'
+  },
+  {
+    num: 'VI', nameJp: '恋人', nameEn: 'The Lovers',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="35" cy="40" r="10" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="65" cy="40" r="10" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="35" y1="50" x2="35" y2="78" stroke="#d4a843" stroke-width="1.5"/><line x1="65" y1="50" x2="65" y2="78" stroke="#d4a843" stroke-width="1.5"/><path d="M40,16 L50,8 L60,16" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="8" x2="50" y2="25" stroke="#d4a843" stroke-width="1.5"/><path d="M50,60 L42,52" stroke="#d4a843" stroke-width="1" opacity="0.5"/><path d="M50,60 L58,52" stroke="#d4a843" stroke-width="1" opacity="0.5"/><path d="M38,85 Q50,95 62,85" fill="none" stroke="#d4a843" stroke-width="1.5"/></svg>`,
+    upKw: ['愛', '選択', '調和'],
+    upMsg: '大切な選択の時が来ています。心と心のつながりを信じ、愛に基づいた決断をしましょう。真実の関係が深まる好機です。',
+    revKw: ['不調和', '誘惑', '優柔不断'],
+    revMsg: '迷いや葛藤が心を揺さぶっているようです。外見や欲望に惑わされず、本当に大切にしたい価値観を見つめ直してみてください。'
+  },
+  {
+    num: 'VII', nameJp: '戦車', nameEn: 'The Chariot',
+    icon: `<svg viewBox="0 0 100 100"><rect x="25" y="30" width="50" height="35" rx="3" fill="none" stroke="#d4a843" stroke-width="2"/><polygon points="50,10 30,30 70,30" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="50" cy="22" r="4" fill="#d4a843" opacity="0.4"/><circle cx="25" cy="75" r="10" fill="none" stroke="#d4a843" stroke-width="2"/><circle cx="75" cy="75" r="10" fill="none" stroke="#d4a843" stroke-width="2"/><line x1="25" y1="65" x2="25" y2="65" stroke="#d4a843" stroke-width="2"/><polygon points="50,38 46,48 54,48" fill="#d4a843" opacity="0.4"/></svg>`,
+    upKw: ['勝利', '前進', '意志の力'],
+    upMsg: '強い意志と決断力で前進する時です。困難があっても、あなたの情熱と行動力が勝利をもたらします。自信を持って突き進みましょう。',
+    revKw: ['暴走', '挫折', '方向性の喪失'],
+    revMsg: '勢いだけで突き進むと壁にぶつかります。一度手綱を引き、戦略を見直す時かもしれません。力の使い方を再考しましょう。'
+  },
+  {
+    num: 'VIII', nameJp: '力', nameEn: 'Strength',
+    icon: `<svg viewBox="0 0 100 100"><text x="38" y="22" font-size="18" fill="#d4a843" font-family="serif" opacity="0.6">∞</text><circle cx="50" cy="45" r="15" fill="none" stroke="#d4a843" stroke-width="2"/><path d="M38,55 Q50,75 62,55" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="44" cy="42" r="2" fill="#d4a843" opacity="0.5"/><circle cx="56" cy="42" r="2" fill="#d4a843" opacity="0.5"/><path d="M30,70 Q50,90 70,70" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M35,78 Q50,92 65,78" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/></svg>`,
+    upKw: ['内なる強さ', '忍耐', '勇気'],
+    upMsg: '真の強さは穏やかさの中にあります。困難に対して力ずくではなく、愛と忍耐で向き合うことで道は開けます。あなたの内なる強さを信じて。',
+    revKw: ['弱気', '自信喪失', '感情の不安定'],
+    revMsg: '自分の力を過小評価していませんか。不安に飲み込まれそうな時こそ、内側の静かな強さを思い出してください。あなたは思っている以上に強いのです。'
+  },
+  {
+    num: 'IX', nameJp: '隠者', nameEn: 'The Hermit',
+    icon: `<svg viewBox="0 0 100 100"><line x1="50" y1="30" x2="50" y2="85" stroke="#d4a843" stroke-width="2"/><polygon points="50,10 40,30 60,30" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="50" cy="20" r="6" fill="#d4a843" opacity="0.3"/><circle cx="50" cy="20" r="3" fill="#d4a843" opacity="0.5"/><circle cx="50" cy="48" r="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.4"/><path d="M30,85 L50,85 L70,85" stroke="#d4a843" stroke-width="1.5"/><polygon points="42,90 50,95 58,90" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.4"/></svg>`,
+    upKw: ['内省', '探求', '孤高の知恵'],
+    upMsg: '一人の時間が必要な時期です。喧噪から離れ、内なる光に照らされた道を歩みましょう。深い内省が真の答えをもたらします。',
+    revKw: ['孤立', '引きこもり', '頑なさ'],
+    revMsg: '内省が行き過ぎて孤立していませんか。自分の殻に閉じこもるのではなく、時には他者の光も受け入れましょう。助けを求めることは弱さではありません。'
+  },
+  {
+    num: 'X', nameJp: '運命の輪', nameEn: 'Wheel of Fortune',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="none" stroke="#d4a843" stroke-width="2"/><circle cx="50" cy="50" r="20" fill="none" stroke="#d4a843" stroke-width="1.2"/><circle cx="50" cy="50" r="5" fill="#d4a843" opacity="0.4"/><line x1="50" y1="15" x2="50" y2="85" stroke="#d4a843" stroke-width="1" opacity="0.5"/><line x1="15" y1="50" x2="85" y2="50" stroke="#d4a843" stroke-width="1" opacity="0.5"/><line x1="25" y1="25" x2="75" y2="75" stroke="#d4a843" stroke-width="0.8" opacity="0.4"/><line x1="75" y1="25" x2="25" y2="75" stroke="#d4a843" stroke-width="0.8" opacity="0.4"/><polygon points="50,15 53,22 47,22" fill="#d4a843" opacity="0.6"/></svg>`,
+    upKw: ['転機', '好転', '運命の巡り'],
+    upMsg: '運命の歯車が大きく回り始めています。変化を恐れず受け入れましょう。この流れに乗ることで、想像以上の幸運がやってきます。',
+    revKw: ['停滞', '不運', '変化への抵抗'],
+    revMsg: '流れに逆らっていませんか。思い通りにいかない時期ですが、この停滞にも意味があります。変化を受け入れる準備を整えましょう。'
+  },
+  {
+    num: 'XI', nameJp: '正義', nameEn: 'Justice',
+    icon: `<svg viewBox="0 0 100 100"><line x1="50" y1="15" x2="50" y2="80" stroke="#d4a843" stroke-width="2"/><line x1="20" y1="35" x2="80" y2="35" stroke="#d4a843" stroke-width="2"/><path d="M20,35 L15,50 L25,50 Z" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M80,35 L75,50 L85,50 Z" fill="none" stroke="#d4a843" stroke-width="1.5"/><polygon points="50,10 46,18 54,18" fill="#d4a843" opacity="0.5"/><line x1="38" y1="80" x2="62" y2="80" stroke="#d4a843" stroke-width="2.5"/><polygon points="44,72 50,62 56,72" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.4"/></svg>`,
+    upKw: ['公正', '均衡', '真実'],
+    upMsg: '公平な判断と誠実さが求められています。偏りのない目で状況を見つめ、正しいと信じる道を選びましょう。真実は必ず明らかになります。',
+    revKw: ['不公平', '偏見', 'バランスの崩壊'],
+    revMsg: '判断に偏りが生じているかもしれません。自分の中の思い込みを点検し、すべての側面から状況を見直す必要があります。'
+  },
+  {
+    num: 'XII', nameJp: '吊された男', nameEn: 'The Hanged Man',
+    icon: `<svg viewBox="0 0 100 100"><line x1="30" y1="15" x2="70" y2="15" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="15" x2="50" y2="35" stroke="#d4a843" stroke-width="2"/><circle cx="50" cy="70" r="10" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="35" x2="50" y2="60" stroke="#d4a843" stroke-width="2"/><line x1="50" y1="45" x2="35" y2="55" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="45" x2="65" y2="55" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="35" x2="40" y2="25" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="35" x2="60" y2="25" stroke="#d4a843" stroke-width="1.5"/><circle cx="50" cy="70" r="4" fill="#d4a843" opacity="0.3"/></svg>`,
+    upKw: ['試練', '手放し', '新たな視点'],
+    upMsg: '今は動く時ではなく、待つ時です。視点を変えることで見えてくるものがあります。犠牲や我慢の先に、かけがえのない気づきが待っています。',
+    revKw: ['無駄な犠牲', '停滞', '執着'],
+    revMsg: '意味のない我慢を続けていませんか。手放すべきものにしがみつくことで、前に進む力を失っています。執着を解き放ちましょう。'
+  },
+  {
+    num: 'XIII', nameJp: '死神', nameEn: 'Death',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="14" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="44" cy="28" r="3" fill="none" stroke="#d4a843" stroke-width="1"/><circle cx="56" cy="28" r="3" fill="none" stroke="#d4a843" stroke-width="1"/><path d="M42,36 Q50,42 58,36" fill="none" stroke="#d4a843" stroke-width="1"/><line x1="50" y1="44" x2="50" y2="65" stroke="#d4a843" stroke-width="1.5"/><path d="M30,70 Q50,55 70,70" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M35,80 Q50,70 65,80 Q50,90 35,80" fill="none" stroke="#d4a843" stroke-width="1"/><polygon points="50,88 46,96 54,96" fill="#d4a843" opacity="0.3"/></svg>`,
+    upKw: ['終わりと始まり', '変容', '再生'],
+    upMsg: '一つの章が終わり、新たな章が始まろうとしています。古いものを手放すことを恐れないでください。終わりは常に新しい始まりです。',
+    revKw: ['変化への恐怖', '停滞', '過去への執着'],
+    revMsg: '変化を恐れて古いパターンにしがみついていませんか。避けられない変容を受け入れることで、ようやく前に進むことができます。'
+  },
+  {
+    num: 'XIV', nameJp: '節制', nameEn: 'Temperance',
+    icon: `<svg viewBox="0 0 100 100"><path d="M30,30 L30,60 Q30,70 40,70 L60,70 Q70,70 70,60 L70,30 Q70,20 60,20 L40,20 Q30,20 30,30" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M30,45 Q50,60 70,45" fill="none" stroke="#d4a843" stroke-width="1.5" stroke-dasharray="3,3"/><circle cx="50" cy="40" r="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.5"/><polygon points="50,12 46,20 54,20" fill="#d4a843" opacity="0.4"/><polygon points="50,88 46,78 54,78" fill="#d4a843" opacity="0.4"/><line x1="20" y1="50" x2="28" y2="50" stroke="#d4a843" stroke-width="1" opacity="0.4"/><line x1="72" y1="50" x2="80" y2="50" stroke="#d4a843" stroke-width="1" opacity="0.4"/></svg>`,
+    upKw: ['調和', '節度', '癒し'],
+    upMsg: 'バランスと調和が鍵を握っています。極端に走らず、中庸の道を歩みましょう。穏やかな忍耐と調整が、素晴らしい結果を生み出します。',
+    revKw: ['不均衡', '過剰', '焦り'],
+    revMsg: '何かに偏りすぎていませんか。仕事と休息、与えることと受け取ること。バランスが崩れると心身ともに疲弊します。調和を取り戻しましょう。'
+  },
+  {
+    num: 'XV', nameJp: '悪魔', nameEn: 'The Devil',
+    icon: `<svg viewBox="0 0 100 100"><polygon points="50,10 20,90 80,90" fill="none" stroke="#d4a843" stroke-width="2"/><polygon points="50,90 20,10 80,10" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.3"/><circle cx="50" cy="45" r="12" fill="none" stroke="#d4a843" stroke-width="1.5"/><circle cx="46" cy="43" r="2" fill="#d4a843" opacity="0.5"/><circle cx="54" cy="43" r="2" fill="#d4a843" opacity="0.5"/><path d="M44,50 Q50,55 56,50" fill="none" stroke="#d4a843" stroke-width="1"/><line x1="38" y1="33" x2="34" y2="25" stroke="#d4a843" stroke-width="1.5"/><line x1="62" y1="33" x2="66" y2="25" stroke="#d4a843" stroke-width="1.5"/></svg>`,
+    upKw: ['束縛', '欲望', '誘惑'],
+    upMsg: '何かに囚われていないか、自分に問いかけてみてください。依存や執着の鎖は、実は自分で外すことができるものです。本当の自由を取り戻しましょう。',
+    revKw: ['解放', '回復', '誘惑からの脱出'],
+    revMsg: '束縛から解放されるきっかけが訪れています。悪習慣や有害な関係から距離を置く勇気を持ちましょう。自由への一歩を踏み出す時です。'
+  },
+  {
+    num: 'XVI', nameJp: '塔', nameEn: 'The Tower',
+    icon: `<svg viewBox="0 0 100 100"><rect x="35" y="25" width="30" height="60" fill="none" stroke="#d4a843" stroke-width="2"/><polygon points="50,10 32,25 68,25" fill="none" stroke="#d4a843" stroke-width="1.5"/><rect x="43" y="65" width="14" height="20" fill="none" stroke="#d4a843" stroke-width="1.2"/><rect x="40" y="35" width="8" height="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.6"/><rect x="52" y="35" width="8" height="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.6"/><rect x="40" y="50" width="8" height="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.6"/><rect x="52" y="50" width="8" height="8" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.6"/><line x1="25" y1="12" x2="35" y2="20" stroke="#d4a843" stroke-width="1.5" opacity="0.6"/><line x1="75" y1="12" x2="65" y2="20" stroke="#d4a843" stroke-width="1.5" opacity="0.6"/><polygon points="20,8 22,14 16,14" fill="#d4a843" opacity="0.4"/><polygon points="80,8 82,14 76,14" fill="#d4a843" opacity="0.4"/></svg>`,
+    upKw: ['崩壊', '衝撃', '解放'],
+    upMsg: '突然の変化や崩壊が訪れるかもしれません。しかし、古い構造が壊れることで真実が露わになります。崩壊の先にある再建を信じてください。',
+    revKw: ['回避', '最悪の事態の回避', '変化の先延ばし'],
+    revMsg: '破壊的な変化を先延ばしにしていませんか。小さな変化を受け入れることで、大きな崩壊を防ぐことができます。今のうちに手を打ちましょう。'
+  },
+  {
+    num: 'XVII', nameJp: '星', nameEn: 'The Star',
+    icon: `<svg viewBox="0 0 100 100"><polygon points="50,8 56,28 78,28 60,40 66,60 50,48 34,60 40,40 22,28 44,28" fill="none" stroke="#d4a843" stroke-width="1.8"/><circle cx="50" cy="35" r="6" fill="#d4a843" opacity="0.2"/><polygon points="25,70 27,76 33,76 28,80 30,86 25,82 20,86 22,80 17,76 23,76" fill="#d4a843" opacity="0.4"/><polygon points="75,70 77,76 83,76 78,80 80,86 75,82 70,86 72,80 67,76 73,76" fill="#d4a843" opacity="0.4"/><polygon points="50,78 52,84 58,84 53,88 55,94 50,90 45,94 47,88 42,84 48,84" fill="#d4a843" opacity="0.3"/></svg>`,
+    upKw: ['希望', '癒し', 'インスピレーション'],
+    upMsg: '暗闘の後に輝く希望の星が見えています。癒しと再生の時期です。宇宙があなたを見守り、導いてくれていることを信じましょう。',
+    revKw: ['失望', '希望の喪失', '自信喪失'],
+    revMsg: '希望の光が見えにくくなっているようです。しかし、星は雲に隠れても消えてはいません。小さな光を見つけ、自分を信じることから始めましょう。'
+  },
+  {
+    num: 'XVIII', nameJp: '月', nameEn: 'The Moon',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="35" r="20" fill="none" stroke="#d4a843" stroke-width="1.8"/><circle cx="42" cy="30" r="15" fill="var(--bg-deep)" stroke="none"/><circle cx="50" cy="35" r="5" fill="none" stroke="#d4a843" stroke-width="0.8" opacity="0.4"/><path d="M20,80 Q30,65 40,80 Q50,65 60,80 Q70,65 80,80" fill="none" stroke="#d4a843" stroke-width="1.2" opacity="0.5"/><circle cx="30" cy="72" r="2" fill="#d4a843" opacity="0.3"/><circle cx="70" cy="72" r="2" fill="#d4a843" opacity="0.3"/><polygon points="25,90 27,86 29,90" fill="#d4a843" opacity="0.3"/><polygon points="71,90 73,86 75,90" fill="#d4a843" opacity="0.3"/></svg>`,
+    upKw: ['幻想', '不安', '潜在意識'],
+    upMsg: '物事がはっきりと見えない時期です。不安や恐れに支配されず、直感を頼りに霧の中を進みましょう。真実は夜明けとともに明らかになります。',
+    revKw: ['混乱からの脱出', '真実の露出', '恐怖の克服'],
+    revMsg: '曖昧だったものが少しずつ明らかになってきています。恐れていたことが実は思ったほど怖くなかったと気づくでしょう。霧が晴れ始めています。'
+  },
+  {
+    num: 'XIX', nameJp: '太陽', nameEn: 'The Sun',
+    icon: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="18" fill="none" stroke="#d4a843" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="#d4a843" opacity="0.25"/><line x1="50" y1="10" x2="50" y2="25" stroke="#d4a843" stroke-width="1.8"/><line x1="50" y1="75" x2="50" y2="90" stroke="#d4a843" stroke-width="1.8"/><line x1="10" y1="50" x2="25" y2="50" stroke="#d4a843" stroke-width="1.8"/><line x1="75" y1="50" x2="90" y2="50" stroke="#d4a843" stroke-width="1.8"/><line x1="22" y1="22" x2="33" y2="33" stroke="#d4a843" stroke-width="1.3"/><line x1="67" y1="33" x2="78" y2="22" stroke="#d4a843" stroke-width="1.3"/><line x1="22" y1="78" x2="33" y2="67" stroke="#d4a843" stroke-width="1.3"/><line x1="67" y1="67" x2="78" y2="78" stroke="#d4a843" stroke-width="1.3"/></svg>`,
+    upKw: ['成功', '喜び', '活力'],
+    upMsg: '輝かしい成功と喜びの時期が到来しています。あなたの努力が実を結び、周囲にも温かい光を届けることができるでしょう。太陽のように堂々と輝いてください。',
+    revKw: ['延期', '自信過剰', '一時的な暗雲'],
+    revMsg: '成功は約束されていますが、少し時間がかかるかもしれません。過信せず、着実に歩み続けましょう。雲の向こうで太陽は確かに輝いています。'
+  },
+  {
+    num: 'XX', nameJp: '審判', nameEn: 'Judgement',
+    icon: `<svg viewBox="0 0 100 100"><polygon points="50,8 42,30 58,30" fill="none" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="30" x2="50" y2="45" stroke="#d4a843" stroke-width="2"/><line x1="38" y1="38" x2="62" y2="38" stroke="#d4a843" stroke-width="1.5"/><path d="M25,60 L25,85 Q25,90 30,90 L40,90" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M75,60 L75,85 Q75,90 70,90 L60,90" fill="none" stroke="#d4a843" stroke-width="1.5"/><path d="M40,90 L60,90" stroke="#d4a843" stroke-width="1.5"/><circle cx="50" cy="72" r="8" fill="none" stroke="#d4a843" stroke-width="1.2"/><line x1="50" y1="64" x2="50" y2="58" stroke="#d4a843" stroke-width="1.5"/><line x1="50" y1="80" x2="50" y2="90" stroke="#d4a843" stroke-width="1"/></svg>`,
+    upKw: ['覚醒', '復活', '最終判断'],
+    upMsg: '人生の転換期を迎えています。過去を振り返り、学びを統合して新たなステージへ進みましょう。内なる呼びかけに応える時が来ました。',
+    revKw: ['後悔', '自己否定', '決断の先送り'],
+    revMsg: '過去の後悔にとらわれすぎていませんか。自分を許し、前を向く決断をする時です。変化への恐れを手放し、新しい自分を受け入れましょう。'
+  },
+  {
+    num: 'XXI', nameJp: '世界', nameEn: 'The World',
+    icon: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="35" ry="40" fill="none" stroke="#d4a843" stroke-width="2"/><ellipse cx="50" cy="50" rx="18" ry="40" fill="none" stroke="#d4a843" stroke-width="1" opacity="0.4"/><line x1="15" y1="50" x2="85" y2="50" stroke="#d4a843" stroke-width="0.8" opacity="0.4"/><circle cx="50" cy="50" r="6" fill="#d4a843" opacity="0.25"/><polygon points="50,8 52,14 48,14" fill="#d4a843" opacity="0.5"/><polygon points="50,92 52,86 48,86" fill="#d4a843" opacity="0.5"/><polygon points="14,50 20,52 20,48" fill="#d4a843" opacity="0.5"/><polygon points="86,50 80,52 80,48" fill="#d4a843" opacity="0.5"/><circle cx="50" cy="50" r="3" fill="#d4a843" opacity="0.5"/></svg>`,
+    upKw: ['完成', '統合', '達成'],
+    upMsg: '一つの大きなサイクルが完了しようとしています。あなたの努力と経験が美しく統合され、完全な調和が生まれます。次のステージへの扉が開かれています。',
+    revKw: ['未完成', '中途半端', '達成感の欠如'],
+    revMsg: 'あと少しで完成なのに、何かが足りないと感じていませんか。最後の仕上げに取り組みましょう。完成を恐れず、勇気を持って区切りをつける時です。'
+  }
+];
+
+// ===== STARFIELD =====
+function createStarfield() {
+  const sf = document.getElementById('starfield');
+  sf.innerHTML = '';
+  const count = Math.min(150, Math.floor(window.innerWidth * window.innerHeight / 5000));
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    star.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${Math.random() * 100}%; top: ${Math.random() * 100}%;
+      opacity: ${Math.random() * 0.6 + 0.1};
+      animation: twinkle ${Math.random() * 4 + 2}s ease-in-out ${Math.random() * 4}s infinite;
+    `;
+    sf.appendChild(star);
+  }
+}
+createStarfield();
+
+// ===== APP STATE =====
+let currentCard = null;
+let isUpright = true;
+let isFlipped = false;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToDraw() {
+  // Pick random card & orientation
+  currentCard = cards[Math.floor(Math.random() * cards.length)];
+  isUpright = Math.random() > 0.5;
+  isFlipped = false;
+
+  // Reset card state
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('flipped');
+  inner.classList.add('card-sway');
+  document.getElementById('resetWrap').style.display = 'none';
+
+  // Build front face
+  buildCardFront();
+
+  // Re-trigger appear animation
+  const container = document.getElementById('cardContainer');
+  container.classList.remove('card-appear');
+  void container.offsetWidth; // force reflow
+  container.classList.add('card-appear');
+
+  showScreen('screen-draw');
+}
+
+function buildCardFront() {
+  const c = currentCard;
+  const kw = isUpright ? c.upKw : c.revKw;
+  const msg = isUpright ? c.upMsg : c.revMsg;
+  const orientLabel = isUpright ? '正位置' : '逆位置';
+  const orientClass = isUpright ? 'upright' : 'reversed-label';
+  const iconClass = isUpright ? '' : 'reversed';
+
+  document.getElementById('cardFront').innerHTML = `
+    <span class="card-number">${c.num}</span>
+    <div class="card-icon-wrap ${iconClass}">${c.icon}</div>
+    <span class="card-name-jp">${c.nameJp}</span>
+    <span class="card-name-en">${c.nameEn}</span>
+    <span class="card-orientation ${orientClass}">${orientLabel}</span>
+    <div class="card-divider"></div>
+    <span class="card-keywords">${kw.join(' ・ ')}</span>
+    <div class="card-divider"></div>
+    <p class="card-message">${msg}</p>
+  `;
+}
+
+function flipCard() {
+  if (isFlipped) return;
+  isFlipped = true;
+
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('card-sway');
+  inner.classList.add('flipped');
+
+  // Hide draw texts
+  document.getElementById('drawTexts').classList.add('hidden');
+
+  // Show glow burst
+  const container = document.getElementById('cardContainer');
+  const glow = document.createElement('div');
+  glow.className = 'glow-burst';
+  container.appendChild(glow);
+  setTimeout(() => glow.remove(), 1300);
+
+  // Show reset button after flip completes
+  setTimeout(() => {
+    const wrap = document.getElementById('resetWrap');
+    wrap.style.display = 'block';
+    wrap.style.opacity = '0';
+    wrap.offsetWidth;
+    wrap.style.transition = 'opacity 0.8s ease';
+    wrap.style.opacity = '1';
+  }, 1000);
+}
+
+function resetApp() {
+  document.getElementById('resetWrap').style.display = 'none';
+  document.getElementById('drawTexts').classList.remove('hidden');
+  showScreen('screen-welcome');
+}
+</script>
+</body>
+</html>
